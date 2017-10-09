@@ -1,0 +1,34 @@
+service: support-rotation-slack-service
+
+provider:
+  profile: hendrickson-personal
+  name: aws
+  runtime: python2.7
+  stage: dev
+  region: eu-west-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Resource: "*"
+      Action:
+        - "dynamodb:PutItem"
+        - "dynamodb:UpdateItem"
+        - "dynamodb:DeleteItem"
+        - "dynamodb:Query"
+        - "lambda:*"
+  environment:
+    ${file(../env_vars.yml):${self:custom.stage}}
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+
+functions:
+  functionSupportRotation:
+    handler: handler.support_rotation
+    events:
+      - http:
+          path: slack/support-rotation
+          method: post
+          integration: lambda
+
+  functionDispatcher:
+    handler: handler.dispatcher
